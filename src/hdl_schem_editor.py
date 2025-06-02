@@ -5,7 +5,7 @@ from   os.path import exists
 import tkinter as tk
 from   tkinter import ttk
 from   tkinter import messagebox
-import urllib.request
+import requests
 import re
 import argparse
 import json
@@ -39,10 +39,11 @@ class MyTk(tk.Tk):
 
 def read_message():
     try:
-        source  = urllib.request.urlopen("http://www.hdl-schem-editor.de/message.txt")
-        message = source.read()
-        print(message.decode())
-    except urllib.error.URLError:
+        response = requests.get("http://www.hdl-schem-editor.de/message.txt")
+        response.raise_for_status()
+        message = response.text
+        print(message)
+    except requests.exceptions.InvalidURL:
         print("Message file was not found.")
     except ConnectionRefusedError:
         pass
@@ -50,8 +51,8 @@ def read_message():
 def check_version():
     try:
         print("Checking for a newer version ...")
-        source = urllib.request.urlopen("http://www.hdl-schem-editor.de/index.php")
-        website_source   = str(source.read())
+        response         = requests.get("http://www.hdl-schem-editor.de/index.php")
+        website_source   = response.text
         version_start    = website_source.find("Version")
         new_version      = website_source[version_start:version_start+24]
         end_index        = new_version.find("(")
@@ -62,7 +63,7 @@ def check_version():
             print("Please update to the new version of HDL-SCHEM-Editor available at http://www.hdl-schem-editor.de")
         else:
             print("Your version of HDL-SCHEM-Editor is up to date.")
-    except urllib.error.URLError:
+    except requests.exceptions.InvalidURL:
         print("HDL-SCHEM-Editor version could not be checked, as you are offline.")
     except ConnectionRefusedError:
         print("HDL-SCHEM-Editor version could not be checked, as connecting was refused.")
